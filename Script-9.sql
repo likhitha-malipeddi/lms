@@ -216,7 +216,8 @@ INSERT INTO Review (review_id, member_id, book_id, rating, comment, review_date)
                    (11, 11, 11, 1, 'Did not like the writing style.', '2025-07-11'),
                    (12, 12, 12, 4, 'Helpful and well structured.', '2025-07-12');
 
-SELECT * FROM REVIEW
+SELECT * FROM Review
+     
 
 
 
