@@ -53,7 +53,7 @@ if __name__ == "__main__":
     valid_members = []
     errors = []
 
-    for index, row in df_members.iterrows():
+    for index, row in df_members .iterrows():
         try:
             member = Member(**row.to_dict())
             valid_members.append(member)
