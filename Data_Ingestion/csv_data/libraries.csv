@@ -1,0 +1,4 @@
+name,email,phone
+Central Library,central@lib.com,1234567890
+Science Wing,science@lib.com,9876543210
+Invalid Email,noemail.com,1234567890
