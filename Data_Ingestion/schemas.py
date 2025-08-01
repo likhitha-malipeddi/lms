@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
 import re
+import os
 import pandas as pd
 import logging
 
@@ -42,14 +43,17 @@ class Member(BaseModel):
         else:
              raise ValueError('Invalid phone number format')
 
+print("Current Working Directory:", os.getcwd())
+print("Files in csv_data folder:", os.listdir("Data_Ingestion/csv_data"))
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,format="%(message)s")
 
-    df = pd.read_csv("members.csv")
+    df_members = pd.read_csv("Data_Ingestion/csv_data/members.csv")
     valid_members = []
     errors = []
 
-    for index, row in df.iterrows():
+    for index, row in df_members.iterrows():
         try:
             member = Member(**row.to_dict())
             valid_members.append(member)
@@ -64,7 +68,7 @@ if __name__ == "__main__":
     for i, e in errors:
         logging.info(f"Row {i}: {e}")
 
-    df_books = pd.read_csv("books.csv")
+    df_books = pd.read_csv("Data_Ingestion/csv_data/books.csv")
     valid_books = []
     book_errors = []
 
@@ -83,7 +87,7 @@ if __name__ == "__main__":
     for i, e in book_errors:
         logging.info(f"Row {i}: {e}")
 
-    df_authors = pd.read_csv("authors.csv")
+    df_authors = pd.read_csv("Data_Ingestion/csv_data/authors.csv")
     valid_authors = []
     author_errors = []
 
