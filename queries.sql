@@ -1,4 +1,4 @@
-SELECT * FROM Librar
+SELECT * FROM Library
 SELECT * FROM Author
 SELECT * FROM Category
 SELECT * FROM book
@@ -19,14 +19,12 @@ LEFT JOIN Category c ON bc.category_id = c.category_id
 GROUP BY b.book_id;
 
 -- Most borrowed books in the last 30 days
-SELECT 
-    b.title,
-    COUNT(*) AS borrow_count
-FROM Borrowing br
-JOIN Book b ON br.book_id = b.book_id
-GROUP BY br.book_id
+SELECT book_id, COUNT(*) AS borrow_count
+FROM Borrowing
+WHERE borrow_date >= CURDATE() - INTERVAL 30 DAY
+GROUP BY book_id
 ORDER BY borrow_count DESC
-LIMIT 12;
+LIMIT 5;
 
 -- Members with overdue books and calculated late fees
 SELECT 
@@ -54,12 +52,12 @@ GROUP BY b.book_id;
 
 -- Books available in each library with stock levels
 SELECT 
-    L.name AS Librar_name,
+    L.name AS Library_name,
     b.title,
     b.total_copies,
     b.available_copies
 FROM Book b
-JOIN Librar L ON b.Library_id = L.Library_id
+JOIN Library L ON b.Library_id = L.Library_id
 ORDER BY L.name, b.title;
 
 -- count
@@ -112,7 +110,7 @@ SELECT
 FROM ReviewCount rc
 JOIN Book b ON b.book_id = rc.book_id
 ORDER BY rc.review_count DESC
-LIMIT 18;
+LIMIT 3;
 
 -- Window Function: Late fee ranking per member
 SELECT 
@@ -126,11 +124,19 @@ WHERE late_fee > 2;
 -- Start a transaction to borrow a book and update available copies
 START TRANSACTION;
 
-INSERT INTO Borrowing (
-    borrowing_id, member_id, book_id, borrow_date, due_date, return_date, late_fee
+INSERT INTO Borrowing(
+     member_id, 
+     book_id, 
+     borrow_date, 
+     due_date, 
+     return_date
 )
 VALUES (
-    103, 3, 5, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), NULL, 0
+    3, 
+    5, 
+    CURDATE(), 
+    DATE_ADD(CURDATE(), INTERVAL 14 DAY), 
+    NULL
 );
 
 UPDATE Book
@@ -140,4 +146,6 @@ WHERE book_id = 5 AND available_copies > 0;
 COMMIT;
 
 
+
      
+
