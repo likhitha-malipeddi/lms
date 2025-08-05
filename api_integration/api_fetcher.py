@@ -1,77 +1,69 @@
 import argparse
 import json
-import time
-from sqlalchemy import create_engine, Table, MetData
-from api_client import OpenLibraryAPI
-from schemas import Book
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from api_client import OpenLibraryClient
+from Data_Ingestion.schemas import Book
+from Data_Ingestion.models import Book as BookModel, Base
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Fetch books from OpenLibrary API")
-    parser.add_argument('--author', required=True, help='Author name to search')
-    parser.add_argument('--limit', type=int, default=10, help='Max number of books')
-    parser.add_argument('--db', '--database-url', dest='db_url', required=True)
-    parser.add_argument('--output', help='Optional file to save raw data')
-    return parser.parse_args()
+def map_api_book_to_db(api_data):
+    try:
+        return Book(
+            title=api_data.get("title"),
+            description=api_data.get("description", ""),
+            isbn=api_data.get("isbn_13", [""])[0] if api_data.get("isbn_13") else None
+        )
+    except Exception as e:
+        print(f"Validation failed: {e}")
+        return None
+
+def save_to_database(session, book: Book):
+    exists = session.query(BookModel).filter_by(title=book.title).first()
+    if not exists:
+        book_model = BookModel(
+            title=book.title,
+            description=book.description,
+            isbn=book.isbn
+        )
+        session.add(book_model)
+        session.commit()
 
 def main():
-    args = parse_args()
-    client = OpenLibraryAPI()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--author", required=True)
+    parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--db", "--database-url", required=True)
+    parser.add_argument("--output", help="Optional JSON output file")
+    args = parser.parse_args()
 
-    engine = create_engine(args.db_url)
-    metadata = MetaData(bind=engine)
-    metadata.reflect()
+    engine = create_engine(args.db)
     Session = sessionmaker(bind=engine)
-    session = session()
+    session = Session()
+    Base.metadata.create_all(engine)
 
-    books_table = metadata.tables.get('book')
+    client = OpenLibraryClient()
 
-    author_result = client.search_author(args.author)
-    if not author_result["docs"]:
-        print(f"No author found with name '{args.author}'")
+    author_search = client.search_author(args.author)
+    if not author_search or not author_search["docs"]:
+        print("Author not found.")
         return
-    author_key = author_result["docs"][0]["key"]
 
+    author_key = author_search["docs"][0]["key"]
     works = client.get_author_works(author_key, args.limit)
 
-    valid_books = []
-    for entry in works.get("entries", []):
-        try:
-            work_key = entry.get("key")
-            details = client.get_work_details(work_key)
-
-            isbn_list = details.get("identifiers", {}).get("isbn_13", [])
-            isbn = isbn_list[0] if isbn_list else "0000000000000"
-
-            book_data = {
-                "title": details.get("title", ""),
-                "author": args.author,
-                "isbn": isbn
-            }
-
-            validated = Book(**book_data)
-            valid_books.append(validated)
-
-            existing = session.execute(
-                books_table.select().where(books_table.c.isbn == validated.isbn)
-            ).fetchbone()
-
-            if not existing:
-                session.execute(books_table.insert().values(
-                    title=validated.title,
-                    author=validated.author,
-                    isbn=validated.isbn
-                ))
-                session.commit()
-
-        except Exception:
-            continue
+    raw_data = []
+    for work in works.get("entries", []):
+        work_key = work["key"]
+        book_data = client.get_book_details(work_key)
+        if book_data:
+            raw_data.append(book_data)
+            book = map_api_book_to_db(book_data)
+            if book:
+                save_to_database(session, book)
 
     if args.output:
-        with open(args.output, 'w') as f:
-            json.dump([b.dict() for b in valid_books], f, indent=2)
+        with open(args.output, "w") as f:
+            json.dump(raw_data, f, indent=2)
 
 if __name__ == "__main__":
     main()
-
-

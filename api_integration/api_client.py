@@ -1,27 +1,30 @@
-import requests
 import time
+import requests
 
-class OpenLibraryAPI:
-    BASE_URL = "https://openlibrary.org"
+BASE_URL = "https://openlibrary.org"
 
-    def __init__(selfself, rate_limit=1):
-        self.rate_limit = rate_limit
+class OpenLibraryClient:
+    def __init__(self):
+        self.session = requests.session()
 
-    def search_author(selfself, author_name):
-        response = requests.get(f"{self.BASE_URL}/search/authors.json?q={author_name}")
-        response.raise_for_status()
-        return response.json()
+    def _requests(self, url, params=None):
+        try:
+            response = self.session.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            time.sleep(1)
+            return response.json()
+        except requests.exceptions.RequestsException as e:
+            print(f"Request failed: {e}")
+            return None
 
-    def get_author_works(selfself, author_key, limit=10):
-        url = f"{self.BASE_URL}/authors/{author_key}/work.json?limit={limit}"
-        response = requests.get(url)
-        response.raise_for_status()
-        time.sleep(self.rate_limit)
-        return response.json()
+    def search_author(self, author_name):
+        url = f"{BASE_URL}/search/authors.json"
+        return self._request(url, params={"q": author_name})
 
-    def get_work_details(selfself, work_key):
-        url = f"{self.BASE.URL}/works/{work_key}.json"
-        response = requests.get(url)
-        response.raise_for_status()
-        time.sleep(self.rate_limit)
-        return response.json()
+    def get_author_works(self, author_key, limit):
+        url = f"{BASE_URL}/authors/{author_key}/works.json"
+        return self._request(url, params={"limit": limit})
+
+    def get_book_details(selfself, work_key):
+        url = f"{BASE_URL}/works/{work_key}.json"
+        return self._request(url)
