@@ -1,5 +1,0 @@
-pydantic
-sqlalchemy
-psycopg2-binary
-pandas
-email-validator

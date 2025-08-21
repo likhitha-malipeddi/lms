@@ -111,6 +111,23 @@ class ReviewSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Rating must be between 1 and 5.")
             return value
 
+class BorrowRequestSerializer(serializers.Serializer):
+    book_id = serializers.IntegerField(min_value=1)
+    member_id = serializers.IntegerField(min_value=1)
+
+    def validate(self, data):
+        if data["book_id"] == data["member_id"]:
+            raise serializers.ValidationError("Book and member cannot have the same ID.")
+        return data
+
+class ReturnRequestSerializer(serializers.Serializer):
+    borrowing_id = serializers.IntegerField(min_value=1)
+
+    def validate_borrowing_id(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Borrowing ID must be positive.")
+        return value
+
 
 
 

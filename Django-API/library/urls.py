@@ -22,4 +22,7 @@ urlpatterns = router.urls + [
     path("api/borrow/", BorrowBookView.as_view()),
     path("api/return/", ReturnBookView.as_view()),
     path("api/stats/", StatisticsView.as_view()),
+    path("api/borrow/", BorrowBookView.as_view()),
+    path("api/return/", ReturnBookView.as_view()),
 ]
+
