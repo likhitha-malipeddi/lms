@@ -61,7 +61,7 @@ def main():
 
     processors = [
         ("members.csv", MemberSchema, Member, 'email'),
-        ("auhtors.csv", AuthorSchema, Author, 'name'),
+        ("authors.csv", AuthorSchema, Author, 'name'),
         ("libraries.csv", LibrarySchema, Library, 'email'),
         ("books.csv", BookSchema, Book, 'isbn'),
     ]
@@ -76,3 +76,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

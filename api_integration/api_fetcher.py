@@ -11,7 +11,7 @@ def map_api_book_to_db(api_data):
         return Book(
             title=api_data.get("title"),
             description=api_data.get("description", ""),
-            isbn=api_data.get("isbn_13", [""])[0] if api_data.get("isbn_13") else None
+            isbn=api_data.get("isbn_14", [""])[0] if api_data.get("isbn_13") else None
         )
     except Exception as e:
         print(f"Validation failed: {e}")
@@ -31,7 +31,7 @@ def save_to_database(session, book: Book):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--author", required=True)
-    parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--limit", type=int, default=11)
     parser.add_argument("--db", "--database-url", required=True)
     parser.add_argument("--output", help="Optional JSON output file")
     args = parser.parse_args()
@@ -48,7 +48,7 @@ def main():
         print("Author not found.")
         return
 
-    author_key = author_search["docs"][0]["key"]
+    author_key = author_search["docs"][1]["key"]
     works = client.get_author_works(author_key, args.limit)
 
     raw_data = []
@@ -63,7 +63,7 @@ def main():
 
     if args.output:
         with open(args.output, "w") as f:
-            json.dump(raw_data, f, indent=2)
+            json.dump(raw_data, f, indent=3)
 
 if __name__ == "__main__":
     main()
