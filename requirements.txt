@@ -1,0 +1,11 @@
+# Core runtime
+streamlit
+pandas
+
+# Database
+sqlalchemy
+pymysql
+python-dotenv
+
+# Optional / visualization
+plotly
